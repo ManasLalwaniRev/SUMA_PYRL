@@ -20,7 +20,7 @@ const saltRounds = 10;
 const corsOptions = {
   origin: process.env.FRONTEND_URL || 'https://suma-pyrl.vercel.app',
   // origin: 'http://localhost:5173',
-  credentials: include
+  credentials: true
 };
 app.use(cors(corsOptions));
 app.use(express.json());
