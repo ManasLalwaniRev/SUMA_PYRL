@@ -326,13 +326,12 @@
 //   console.log(`Backend server is running on http://localhost:${PORT}`);
 // });
 
-
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const passport = require('passport');
-const MicrosoftStrategy = require('passport-microsoft').Strategy;
+const MicrosoftStrategy = require('passport-microsoft').Strategy; // This is still required for passport setup, even if not used for login
 const session = require('express-session');
 
 // Load environment variables in development
@@ -347,8 +346,7 @@ const saltRounds = 10;
 // --- Middleware ---
 const corsOptions = {
   origin: process.env.FRONTEND_URL || 'https://suma-pyrl.vercel.app',
-  // origin: 'http://localhost:5173',
-  credentials: 'include'
+  credentials: true
 };
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -368,14 +366,13 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // --- PostgreSQL Connection ---
-// Using a config object with provided credentials
 const pool = new Pool({
   host: 'dpg-d0n1vd2li9vc7380m3o0-a.singapore-postgres.render.com',
   user: 'myuser',
   password: 'ODIfyKykuj6zdwchsnqAzccSMNeRgGQ7',
   database: 'planning',
   ssl: {
-    rejectUnauthorized: false // This will ensure SSL is used for both production and development environments
+    rejectUnauthorized: false
   }
 });
 
@@ -404,33 +401,19 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-// Commenting out Microsoft Authentication
-// passport.use(new MicrosoftStrategy({
-//     clientID: process.env.MICROSOFT_CLIENT_ID,
-//     clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
-//     callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5001'}/auth/microsoft/callback`,
-//     scope: ['user.read']
-//   },
-//   async function(accessToken, refreshToken, profile, done) {
-//     try {
-//         const email = profile.emails[0].value;
-//         const displayName = profile.displayName;
-//         let userResult = await pool.query('SELECT * FROM PUBLIC.SUMA_users WHERE user_name = $1', [email]);
-//         if (userResult.rows.length > 0) {
-//             return done(null, userResult.rows[0]);
-//         } else {
-//             const hashedPassword = await bcrypt.hash(`microsoft-${Date.now()}`, saltRounds);
-//             const newUserResult = await pool.query(
-//                 'INSERT INTO PUBLIC.SUMA_users (user_name, password, user_role, avatar_url) VALUES ($1, $2, $3, $4) RETURNING *',
-//                 [email, hashedPassword, 'user', `https://ui-avatars.com/api/?name=${displayName.replace(' ', '+')}`]
-//             );
-//             return done(null, newUserResult.rows[0]);
-//         }
-//     } catch (err) {
-//         return done(err, null);
-//     }
-//   }
-// ));
+// Microsoft Strategy is defined but commented out for direct login
+passport.use(new MicrosoftStrategy({
+  clientID: process.env.MICROSOFT_CLIENT_ID,
+  clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
+  callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5001'}/auth/microsoft/callback`,
+  scope: ['user.read']
+},
+async function(accessToken, refreshToken, profile, done) {
+  // This function would normally handle Microsoft OAuth logic
+  // For now, it's not used for direct login
+  return done(null, null); // Placeholder
+}
+));
 
 // --- USER AUTHENTICATION & MANAGEMENT ROUTES ---
 app.get('/api/check-auth', (req, res) => {
@@ -445,52 +428,32 @@ app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   const ip_address = req.ip;
 
-  // Hardcode username and password for login
-  const hardcodedUsername = 'Revolve';
-  const hardcodedPassword = 'password';
-
-  if (username !== hardcodedUsername || password !== hardcodedPassword) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-
   try {
     const result = await pool.query('SELECT * FROM PUBLIC.SUMA_users WHERE user_name = $1', [username]);
     if (result.rows.length === 0) {
-      // If the hardcoded user doesn't exist, create it.
-      const hashedPassword = await bcrypt.hash(hardcodedPassword, saltRounds);
-      const newUserResult = await pool.query(
-        'INSERT INTO PUBLIC.SUMA_users (user_name, password, user_role, avatar_url) VALUES ($1, $2, $3, $4) RETURNING *',
-        [hardcodedUsername, hashedPassword, 'admin', 'https://ui-avatars.com/api/?name=Revolve']
-      );
-      const user = newUserResult.rows[0];
-      await pool.query('UPDATE PUBLIC.SUMA_users SET last_login = NOW(), ip_address = $1 WHERE user_id = $2', [ip_address, user.user_id]);
-      req.login(user, (err) => {
-        if (err) {
-          console.error(err);
-          return res.status(500).json({ error: 'Internal server error' });
-        }
-        res.json({ userId: user.user_id, username: user.user_name, role: user.user_role, avatarUrl: user.avatar_url });
-      });
-    } else {
-      const user = result.rows[0];
-      // Compare the hardcoded password to the hashed password in the database
-      const passwordMatch = await bcrypt.compare(hardcodedPassword, user.password);
-      if (!passwordMatch) {
-        // If the password has been changed in the database, update it back to the hardcoded one.
-        const hashedPassword = await bcrypt.hash(hardcodedPassword, saltRounds);
-        await pool.query('UPDATE PUBLIC.SUMA_users SET password = $1 WHERE user_id = $2', [hashedPassword, user.user_id]);
-      }
-      await pool.query('UPDATE PUBLIC.SUMA_users SET last_login = NOW(), ip_address = $1 WHERE user_id = $2', [ip_address, user.user_id]);
-      req.login(user, (err) => {
-        if (err) {
-          console.error(err);
-          return res.status(500).json({ error: 'Internal server error' });
-        }
-        res.json({ userId: user.user_id, username: user.user_name, role: user.user_role, avatarUrl: user.avatar_url });
-      });
+      return res.status(401).json({ error: 'Invalid username or password. Please try again.' });
     }
+    const user = result.rows[0];
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid username or password. Please try again.' });
+    }
+
+    // If login is successful, log the last login and IP address
+    await pool.query('UPDATE PUBLIC.SUMA_users SET last_login = NOW(), ip_address = $1 WHERE user_id = $2', [ip_address, user.user_id]);
+
+    // Manually log in the user using Passport
+    req.login(user, (err) => {
+      if (err) {
+        console.error("Passport login error:", err);
+        return res.status(500).json({ error: 'Internal server error during login session.' });
+      }
+      // Respond with user details after successful login
+      res.json({ userId: user.user_id, username: user.user_name, role: user.user_role, avatarUrl: user.avatar_url });
+    });
+
   } catch (err) {
-    console.error(err);
+    console.error("Login route error:", err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -676,9 +639,9 @@ app.post('/api/requisitions', async (req, res) => {
   }
 });
 
-// --- Microsoft Authentication Routes (Commented out) ---
+// --- Microsoft Authentication Routes (Commented Out) ---
+// These routes are kept in the code but commented out as per the requirement to remove Microsoft auth for direct login.
 // app.get('/auth/microsoft', passport.authenticate('microsoft'));
-
 // app.get('/auth/microsoft/callback',
 //   passport.authenticate('microsoft', {
 //     successRedirect: process.env.FRONTEND_URL || 'https://suma-pyrl.vercel.app',
