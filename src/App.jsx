@@ -190,7 +190,7 @@ import UserProfilePage from './components/UserProfilePage';
 import PositionReqPage from './components/PositionReq';
 
 // const API_URL = 'http://localhost:5001/api';
-const API_URL = 'https://suma-pyrl.vercel.app/api';
+const API_URL = 'https://suma-pyrl.onrender.com/api';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -245,6 +245,7 @@ export default function App() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
+      credentials: 'include',
     });
 
     if (!response.ok) {
