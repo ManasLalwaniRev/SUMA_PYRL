@@ -26,14 +26,14 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'a-very-secret-key-that-should-be-in-env',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        sameSite: 'lax'
-    }
+  secret: process.env.SESSION_SECRET || 'a-very-secret-key-that-should-be-in-env',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'none'
+  }
 }));
 
 app.use(passport.initialize());
