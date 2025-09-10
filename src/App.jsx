@@ -189,8 +189,8 @@ import PayrollPage from './components/PayrollPage';
 import UserProfilePage from './components/UserProfilePage';
 import PositionReqPage from './components/PositionReq';
 
-// The API URL is now read from an environment variable
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+// const API_URL = 'http://localhost:5001/api';
+const API_URL = 'https://suma-pyrl.vercel.app/api';
 
 export default function App() {
   const [user, setUser] = useState(null);

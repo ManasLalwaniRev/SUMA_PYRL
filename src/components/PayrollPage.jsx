@@ -20,7 +20,8 @@ const PayrollForm = ({ onSave, initialData, onCancel, isEditing }) => {
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
-                const response = await fetch('http://localhost:5001/api/employees');
+                // const response = await fetch('http://localhost:5001/api/employees');
+                const response = await fetch('https://suma-pyrl.vercel.app/api/employees');
                 const data = await response.json();
                 setEmployees(data);
             } catch (error) {
@@ -46,7 +47,8 @@ const PayrollForm = ({ onSave, initialData, onCancel, isEditing }) => {
         }
         setSelectedEmployeeId(employeeId);
         try {
-            const response = await fetch(`http://localhost:5001/api/employees/${employeeId}`);
+            // const response = await fetch(`http://localhost:5001/api/employees/${employeeId}`);
+            const response = await fetch(`https://suma-pyrl.vercel.app/api/employees/${employeeId}`);
             const data = await response.json();
             const hireDate = data.dateOfHire ? new Date(data.dateOfHire).toISOString().split('T')[0] : '';
             setFormData(prev => ({

@@ -365,7 +365,7 @@ export default function PositionReqPage({ navigate }) {
         const fetchRequisitions = async () => {
             setIsLoading(true);
             try {
-                const response = await fetch('http://localhost:5001/api/requisitions');
+                const response = await fetch('https://suma-pyrl.vercel.app/api/requisitions');
                 const data = await response.json();
                 setRequisitions(data);
             } catch (error) {
@@ -379,14 +379,16 @@ export default function PositionReqPage({ navigate }) {
 
     const handleSave = async (formData) => {
         try {
-            await fetch('http://localhost:5001/api/requisitions', {
+            // await fetch('http://localhost:5001/api/requisitions', {
+            await fetch('https://suma-pyrl.vercel.app/api/requisitions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             });
             setMode('view');
             // Refetch data to show the new entry
-            const response = await fetch('http://localhost:5001/api/requisitions');
+            // const response = await fetch('http://localhost:5001/api/requisitions');
+            const response = await fetch('https://suma-pyrl.vercel.app/api/requisitions');
             const data = await response.json();
             setRequisitions(data);
             // Show success notification

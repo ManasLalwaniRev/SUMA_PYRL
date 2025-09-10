@@ -25,7 +25,8 @@ export default function LoginPage({ onLogin }) {
 
   // This function will handle the redirect to the backend
   const handleMicrosoftLogin = () => {
-    window.location.href = 'http://localhost:5001/auth/microsoft';
+  // window.location.href = 'http://localhost:5001/auth/microsoft';
+  window.location.href = 'https://suma-pyrl.vercel.app/auth/microsoft';
   };
 
   return (

@@ -107,7 +107,8 @@ const ChangePasswordForm = ({ userId }) => {
         setMessage('');
 
         try {
-            const response = await fetch('http://localhost:5001/api/users/change-password', {
+            // const response = await fetch('http://localhost:5001/api/users/change-password', {
+            const response = await fetch('https://suma-pyrl.vercel.app/api/users/change-password', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId, newPassword }),
@@ -149,7 +150,8 @@ const AdminView = ({ currentUser, onProfileUpdate }) => {
         setIsLoading(true);
         setError('');
         try {
-            const response = await fetch('http://localhost:5001/api/users');
+            // const response = await fetch('http://localhost:5001/api/users');
+            const response = await fetch('https://suma-pyrl.vercel.app/api/users');
             if (!response.ok) throw new Error('Failed to fetch users');
             const data = await response.json();
             setUsers(data);
@@ -167,8 +169,10 @@ const AdminView = ({ currentUser, onProfileUpdate }) => {
 
     const handleSaveUser = async (userData) => {
         const url = userData.userId 
-            ? `http://localhost:5001/api/users/${userData.userId}` 
-            : 'http://localhost:5001/api/users';
+            // ? `http://localhost:5001/api/users/${userData.userId}` 
+            ? `https://suma-pyrl.vercel.app/api/users/${userData.userId}` 
+            // : 'http://localhost:5001/api/users';
+            : 'https://suma-pyrl.vercel.app/api/users';
         const method = userData.userId ? 'PUT' : 'POST';
 
         await fetch(url, {
@@ -277,7 +281,8 @@ const UserView = ({ currentUser, onProfileUpdate }) => {
     const handleAvatarUpdate = async () => {
         setMessage('');
         try {
-            const response = await fetch(`http://localhost:5001/api/users/profile/${currentUser.userId}`, {
+            // const response = await fetch(`http://localhost:5001/api/users/profile/${currentUser.userId}`, {
+            const response = await fetch(`https://suma-pyrl.vercel.app/api/users/profile/${currentUser.userId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ avatarUrl: selectedAvatar }),
